@@ -32,7 +32,7 @@ export class ResponseInterceptor implements NestInterceptor {
 
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.path ?? request.url?.split('?')[0] ?? '';
-    if (path === '/health') {
+    if (path === '/health' || path.includes('/docs')) {
       return next.handle() as Observable<unknown>;
     }
 

@@ -1,13 +1,40 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import { HealthModule } from './health/health.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { LocationsModule } from './locations/locations.module';
+import { SkillsModule } from './skills/skills.module';
+import { ShiftsModule } from './shifts/shifts.module';
+import { AvailabilityModule } from './availability/availability.module';
+import { SwapRequestsModule } from './swap-requests/swap-requests.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
+import { SettingsModule } from './settings/settings.module';
+import { SchedulingValidationModule } from './scheduling-validation/scheduling-validation.module';
+import { OverTimeModule } from './overtime/overtime.module';
+import { FairnessModule } from './fairness/fairness.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
+  providers: [
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
+    },
+  ],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -34,6 +61,8 @@ import { HealthModule } from './health/health.module';
         allowUnknown: true,
       },
     }),
+    EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
@@ -42,15 +71,31 @@ import { HealthModule } from './health/health.module';
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
-        synchronize: configService.get<boolean>('database.synchronize'),
+        synchronize: false,
         logging: configService.get<boolean>('database.logging'),
         autoLoadEntities: true,
+        migrations: ['dist/migrations/*.js'],
+        migrationsRun: true,
         ssl: true,
       }),
       inject: [ConfigService],
       imports: [ConfigModule],
     }),
     HealthModule,
+    UsersModule,
+    AuthModule,
+    LocationsModule,
+    SkillsModule,
+    ShiftsModule,
+    AvailabilityModule,
+    SwapRequestsModule,
+    NotificationsModule,
+    AuditLogModule,
+    SettingsModule,
+    SchedulingValidationModule,
+    OverTimeModule,
+    FairnessModule,
+    RealtimeModule,
   ],
 })
 export class AppModule {}
