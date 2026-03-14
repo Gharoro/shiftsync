@@ -36,17 +36,25 @@ async function bootstrap() {
 
   const prefix = configService.get<string>('API_PREFIX') ?? 'api';
   app.setGlobalPrefix(prefix, {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'docs', method: RequestMethod.GET },
+      { path: 'docs', method: RequestMethod.OPTIONS },
+      { path: 'docs-json', method: RequestMethod.GET },
+      { path: 'docs-json', method: RequestMethod.OPTIONS },
+    ],
   });
 
   app.enableVersioning({
     type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   const nodeEnv = configService.get<string>('NODE_ENV');
   if (nodeEnv !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('ShiftSync API')
+      .setVersion('1')
       .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, config);
