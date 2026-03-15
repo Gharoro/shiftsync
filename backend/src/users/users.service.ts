@@ -140,6 +140,19 @@ export class UsersService {
     );
   }
 
+  async getTestAccounts(): Promise<UserDetailResponseDto[]> {
+    const users = await this.userRepository.find({
+      order: { createdAt: 'DESC' },
+    });
+    const result: UserDetailResponseDto[] = [];
+    for (const u of users) {
+      result.push(
+        await this.toUserDetailResponse(await this.loadUserWithRelations(u.id)),
+      );
+    }
+    return result;
+  }
+
   async findAll(requestingUser: User): Promise<UserDetailResponseDto[]> {
     if (requestingUser.role === UserRole.STAFF) {
       throw new ForbiddenException();

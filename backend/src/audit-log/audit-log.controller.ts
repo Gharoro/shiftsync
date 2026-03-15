@@ -22,6 +22,31 @@ import { AuditLogService } from './audit-log.service';
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
+  @Get()
+  @Roles(UserRole.ADMIN)
+  findByLocationAndDateRange(
+    @Query('location_id') locationId: string | undefined,
+    @Query('start_date') startDate: string | undefined,
+    @Query('end_date') endDate: string | undefined,
+    @CurrentUser() user: User,
+  ): Promise<AuditLog[]> {
+    if (!locationId?.trim()) {
+      throw new BadRequestException('location_id is required');
+    }
+    if (!startDate?.trim()) {
+      throw new BadRequestException('start_date is required');
+    }
+    if (!endDate?.trim()) {
+      throw new BadRequestException('end_date is required');
+    }
+    return this.auditLogService.findByLocationAndDateRange(
+      locationId.trim(),
+      startDate.trim(),
+      endDate.trim(),
+      user,
+    );
+  }
+
   @Get('shift/:shiftId')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   findByShift(

@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { AuditLog } from '../entities/audit-log.entity';
@@ -63,6 +67,44 @@ export class SettingsService {
       byKey.set(s.key, s);
     }
     return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  async updateById(
+    id: string,
+    value: string,
+    requestingUser: User,
+  ): Promise<Settings> {
+    if (requestingUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
+
+    const setting = await this.settingsRepository.findOne({ where: { id } });
+    if (!setting) {
+      throw new NotFoundException('Setting not found');
+    }
+
+    setting.value = value;
+    setting.updatedBy = requestingUser.id;
+    const saved = await this.settingsRepository.save(setting);
+
+    await this.auditLogRepository.save(
+      this.auditLogRepository.create({
+        entityType: 'SETTINGS',
+        entityId: saved.id,
+        locationId: saved.locationId,
+        action: 'UPSERTED',
+        afterState: {
+          id: saved.id,
+          location_id: saved.locationId,
+          key: saved.key,
+          value: saved.value,
+          updated_by: saved.updatedBy,
+        },
+        performedBy: requestingUser.id,
+      }),
+    );
+
+    return saved;
   }
 
   async upsert(
