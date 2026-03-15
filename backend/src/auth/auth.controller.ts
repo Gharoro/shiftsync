@@ -13,11 +13,16 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { User } from '../entities/user.entity';
+import { UsersService } from '../users/users.service';
+import { UserDetailResponseDto } from '../users/dto/user-detail-response.dto';
 
 @ApiTags('auth')
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Public()
   @Post('login')
@@ -28,6 +33,18 @@ export class AuthController {
   async login(@Body() dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.authService.validateUser(dto.email, dto.password);
     return this.authService.login(user);
+  }
+
+  @Public()
+  @Get('test-accounts')
+  @ApiOperation({ summary: 'List test accounts (no auth)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of test users',
+    type: [UserDetailResponseDto],
+  })
+  getTestAccounts(): Promise<UserDetailResponseDto[]> {
+    return this.usersService.getTestAccounts();
   }
 
   @Get('me')

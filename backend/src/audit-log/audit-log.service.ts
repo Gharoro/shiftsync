@@ -74,6 +74,26 @@ export class AuditLogService {
     });
   }
 
+  async findByLocationAndDateRange(
+    locationId: string,
+    startDate: string,
+    endDate: string,
+    requestingUser: User,
+  ): Promise<AuditLog[]> {
+    if (requestingUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return this.auditLogRepository.find({
+      where: {
+        locationId,
+        performedAt: Between(start, end),
+      },
+      order: { performedAt: 'DESC' },
+    });
+  }
+
   async exportLogs(
     locationId: string,
     startDate: string,

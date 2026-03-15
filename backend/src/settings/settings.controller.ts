@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -8,6 +16,7 @@ import { User } from '../entities/user.entity';
 import { Settings } from '../entities/settings.entity';
 import { SettingsService } from './settings.service';
 import { UpsertSettingDto } from './dto/upsert-setting.dto';
+import { UpdateSettingDto } from './dto/update-setting.dto';
 
 @Controller({ path: 'settings', version: '1' })
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -37,5 +46,15 @@ export class SettingsController {
     @CurrentUser() user: User,
   ): Promise<Settings> {
     return this.settingsService.upsert(locationId, dto.key, dto.value, user);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.ADMIN)
+  updateById(
+    @Param('id') id: string,
+    @Body() dto: UpdateSettingDto,
+    @CurrentUser() user: User,
+  ): Promise<Settings> {
+    return this.settingsService.updateById(id, dto.value, user);
   }
 }

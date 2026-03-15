@@ -4,6 +4,8 @@ import { Location } from '../entities/location.entity';
 import { ManagerLocation } from '../entities/manager-location.entity';
 import { LocationCertification } from '../entities/location-certification.entity';
 import { LocationGuard } from '../common/guards/location.guard';
+import { LocationsController } from './locations.controller';
+import { LocationsService } from './locations.service';
 
 @Module({
   imports: [
@@ -13,7 +15,8 @@ import { LocationGuard } from '../common/guards/location.guard';
       LocationCertification,
     ]),
   ],
-  providers: [LocationGuard],
+  controllers: [LocationsController],
+  providers: [LocationGuard, LocationsService],
   exports: [TypeOrmModule, LocationGuard],
 })
 export class LocationsModule {}
